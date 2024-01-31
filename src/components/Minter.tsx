@@ -27,33 +27,36 @@ import type {
     CodeResult,
   } from "near-api-js/lib/providers/provider";
 import { providers, utils } from "near-api-js";
-
+import useUpdateMetadata from "@/hooks/useGetMetadata";
 
 export default function Minter() {
-  const { form, onSubmit, preview, setPreview } = useMintImage();
+  //const { form, onSubmit, preview, setPreview } = useMintImage();
+  const {onSubmit} = useUpdateMetadata()
   const [petData, setPetData] = useState<any>(null);
   const [name, setName] = useState("");
   const [image,setImage]= useState("");
-  const [isShow, setIsShow] = useState(false)
+  const [level, setLevel] = useState("");
+  const [isShow, setIsShow] = useState(false);
+  const [status, setStatus] = useState("");
 
   const { selector,activeAccountId } = useMbWallet();
   const {network} = selector.options;
   const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
   provider.query<CodeResult>({
         request_type: "call_function",
-        account_id: "game.joychi.testnet",
-        method_name: "get_all_pet_metadata",
-        args_base64: 'e30=',
+        account_id: "nft.joychi.testnet",
+        method_name: "nft_token",
+        args_base64: (Buffer.from(JSON.stringify({"token_id":"26"}))).toString("base64"),
         finality: "optimistic",
       })
       .then((res:any) => {
         const petList = JSON.parse(Buffer.from(res.result).toString());
         setPetData(petList)
-        setName(petList[19].name)
-        setImage(petList[19].pet_evolution[2].image)
+        setName(petList.metadata.title)
+        setImage(petList.metadata.media)
     })
-   
-    
+    console.log(petData)
+   //console.log(JSON.stringify({"pet_id":1}))  
   return (
     <>
     {/* <Form {...form}>
@@ -142,13 +145,17 @@ export default function Minter() {
           />
       </div>
       <div className="flex flex-col mt-2">
-        <div className="font-semibold text-md text-black">{name}</div>
+        <div className="font-semibold text-md text-black">Information</div>
+        <div className="font-semibold text-md text-black">Name: {name}</div>
       </div>
     </div>
     <ModalTemplate closeModal={isShow}>
       <div className="mt-5 font-semibold text-lg text-black">Pet name</div>
       <Input className="mt-2 focus:outline-none focus:border-none text-black outline-none bg-white" placeholder="Enter pet name" type="text"/>
-      <Button type="button" className="mt-5 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-full text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">Change</Button>
+      <Button onClick={()=>onSubmit()} type="button" className="mt-5 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-full text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">Change</Button>
+      <Button onClick={()=>setIsShow(false)} className="bg-white hover:bg-red-600 hover:text-white text-gray-800 font-semibold py-2 px-4 border border-red-600 rounded shadow">
+        Cancel
+      </Button>
     </ModalTemplate>
     </>
   );
