@@ -20,7 +20,7 @@ export default function Home() {
   return (
     <>
       <main className="flex flex-col items-center justify-center mt-2 ">
-        <div className="flex flex-1 flex-col w-full flex flex-col justify-center items-center space-y-8  min-h-screen text-gray-500">
+        <div className="flex flex-1 flex-col w-full justify-center items-center space-y-8  min-h-screen text-gray-500">
           <Head>
             <title>Mintbase - Simple Minter Example</title>
           </Head>

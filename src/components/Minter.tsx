@@ -16,19 +16,47 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-
+import { ModalTemplate } from '@/components/Modal/Modal';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import useMintImage from "@/hooks/useMint";
 import { getImageData } from "@/hooks/utils";
-import useGetMetadata from "@/hooks/useGetMetadata";
+import { useState } from "react";
+import { useMbWallet } from "@mintbase-js/react";
+import type {
+    CodeResult,
+  } from "near-api-js/lib/providers/provider";
+import { providers, utils } from "near-api-js";
+
+
 export default function Minter() {
   const { form, onSubmit, preview, setPreview } = useMintImage();
-  //const {petData} = useGetMetadata();
-  //console.log("pet",petData)
+  const [petData, setPetData] = useState<any>(null);
+  const [name, setName] = useState("");
+  const [image,setImage]= useState("");
+  const [isShow, setIsShow] = useState(false)
+
+  const { selector,activeAccountId } = useMbWallet();
+  const {network} = selector.options;
+  const provider = new providers.JsonRpcProvider({ url: network.nodeUrl });
+  provider.query<CodeResult>({
+        request_type: "call_function",
+        account_id: "game.joychi.testnet",
+        method_name: "get_all_pet_metadata",
+        args_base64: 'e30=',
+        finality: "optimistic",
+      })
+      .then((res:any) => {
+        const petList = JSON.parse(Buffer.from(res.result).toString());
+        setPetData(petList)
+        setName(petList[19].name)
+        setImage(petList[19].pet_evolution[2].image)
+    })
+   
+    
   return (
     <>
-    <Form {...form}>
+    {/* <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <Card>
           <CardHeader>
@@ -101,7 +129,27 @@ export default function Minter() {
           </CardFooter>
         </Card>
       </form>
-    </Form>
+    </Form> */}
+    <div
+      className="p-2 bg-black bg-opacity-10 hover:bg-opacity-20 transition-all duration-300 rounded-xl shadow-xl cursor-pointer"
+      onClick={()=>setIsShow(true)}
+    >
+      <div className="w-full relative">
+      <img
+            src={image}
+            alt={name}
+            className="rounded-md w-full h-64 object-cover"
+          />
+      </div>
+      <div className="flex flex-col mt-2">
+        <div className="font-semibold text-md text-black">{name}</div>
+      </div>
+    </div>
+    <ModalTemplate closeModal={isShow}>
+      <div className="mt-5 font-semibold text-lg text-black">Pet name</div>
+      <Input className="mt-2 focus:outline-none focus:border-none text-black outline-none bg-white" placeholder="Enter pet name" type="text"/>
+      <Button type="button" className="mt-5 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-full text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">Change</Button>
+    </ModalTemplate>
     </>
   );
 }
